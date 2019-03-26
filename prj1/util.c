@@ -44,7 +44,7 @@ void printToken(TokenType token, const char* tokenString) {
 
 /* Function newStmtNode creates a new statement node for syntax tree construction */
 
-TreeNode *newStmtNode(StmKind kind) {
+TreeNode *newStmtNode(StmtKind kind) {
   TreeNode *t = (TreeNode *)malloc(sizeof(TreeNode));
   int i;
 
@@ -136,7 +136,7 @@ void printTree (TreeNode *tree) {
           fprintf(listing, "Assign to: %s\n", tree->attr.name);
           break;
         case ReadK:
-          fprintf(listing, "READ: %s\n", tree->attr->name);
+          fprintf(listing, "READ: %s\n", tree->attr.name);
           break;
         case WriteK:
           fprintf(listing, "Write\n");

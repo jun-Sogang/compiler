@@ -25,7 +25,7 @@ typedef enum
   ENDFILE, ERROR, 
   IF, THEN, ELSE, END, REPEAT, UNTILL, READ, WRITE,
   ID, NUM,
-  ASSIGN, EQ, LT, PLUS, MINUS, OVER, LPAREN, RPAREN, SEMI
+  ASSIGN, EQ, LT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI
 } TokenType;
 
 extern FILE* source; /* source code text file */
@@ -66,7 +66,7 @@ typedef struct treeNode
 /* Flags for tracing */
 /* EchoSource = Ture cause the source program to be echoed to the listing file with line numbers during parsing */
 
-extern in EchoSource;
+extern int EchoSource;
 
 /* TraceScan = TRUE cause token information to be printed to the listing file as each token is recognized by the scanner */
 

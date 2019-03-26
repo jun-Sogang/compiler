@@ -1,6 +1,6 @@
 /* main.c */
 
-#include "global.h"
+#include "globals.h"
 
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
 
@@ -82,7 +82,7 @@ main (int argc, char *argv[]) {
         typeCheck(syntaxTree);
         fprintf(listing, "\nType Checking Finished\n");
     }
-if !NO_CODE
+#if !NO_CODE
     if (!Error) {
         char *codefile;
         int fnlen = strcspn(pgm, ".");
@@ -101,5 +101,5 @@ if !NO_CODE
 #endif
 #endif
 #endif
-    retrun 0;
+    return 0;
 }

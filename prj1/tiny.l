@@ -1,20 +1,24 @@
-/* File : tiny.l */
+/****************************************************/
+/* File: tiny.l                                     */
+/* Lex specification for TINY                       */
+/* Compiler Construction: Principles and Practice   */
+/* Kenneth C. Louden                                */
+/****************************************************/
 
 %{
-    #include "globals.h"
-    #include "util.h"
-    #include "scan.h"
-    /* lexeme of identifier or reserved word */
-
-    char tokenString[MAXTOKENLEN + 1];
+#include "globals.h"
+#include "util.h"
+#include "scan.h"
+/* lexeme of identifier or reserved word */
+char tokenString[MAXTOKENLEN+1];
 %}
 
-digit           [0-9]
-number          {digit}+
-letter          [a-zA-Z]
-identifier      {letter}+
-newline         \n
-whitespace      [ \t]+
+digit       [0-9]
+number      {digit}+
+letter      [a-zA-Z]
+identifier  {letter}+
+newline     \n
+whitespace  [ \t]+
 
 %%
 
@@ -23,7 +27,7 @@ whitespace      [ \t]+
 "else"          {return ELSE;}
 "end"           {return END;}
 "repeat"        {return REPEAT;}
-"until"         {return UNTILL;}
+"until"         {return UNTIL;}
 "read"          {return READ;}
 "write"         {return WRITE;}
 ":="            {return ASSIGN;}
@@ -40,33 +44,32 @@ whitespace      [ \t]+
 {identifier}    {return ID;}
 {newline}       {lineno++;}
 {whitespace}    {/* skip whitespace */}
-"{"             {   char c;
-                    do{
-                        c = input();
-                        if (c == '\n') lineno++;
-                    } while (c != '}');
+"{"             { char c;
+                  do
+                  { c = input();
+                    if (c == EOF) break;
+                    if (c == '\n') lineno++;
+                  } while (c != '}');
                 }
 .               {return ERROR;}
 
 %%
 
-TokenType getToken (void) {
-    static int firstTime = TRUE;
-    TokenType currentToken;
-
-    if (firstTime) {
-        firstTime = FALSE;
-        lineno++;
-        yyin = source;
-        yyout = listing;
-    }
-
-    currentToken = yylex();
-    strncpy(tokenString, yytext, MAXTOKENLEN);
-
-    if (TraceScan) {
-        fprintf(listing, "\t%d: ", lineno);
-        printToken(currentToken, tokenString);
-    }
-    return currentToken;
+TokenType getToken(void)
+{ static int firstTime = TRUE;
+  TokenType currentToken;
+  if (firstTime)
+  { firstTime = FALSE;
+    lineno++;
+    yyin = source;
+    yyout = listing;
+  }
+  currentToken = yylex();
+  strncpy(tokenString,yytext,MAXTOKENLEN);
+  if (TraceScan) {
+    fprintf(listing,"\t%d: ",lineno);
+    printToken(currentToken,tokenString);
+  }
+  return currentToken;
 }
+

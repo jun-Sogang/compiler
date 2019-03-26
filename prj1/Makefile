@@ -6,7 +6,7 @@ OBJS = main.o util.o lex.yy.o
 TARGET = 20121622
 
 $(TARGET): $(OBJS)
-				$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+				$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) -lfl
 
 main.o: main.c globals.h util.h scan.h
 				$(CC) $(CFLAGS) -c main.c

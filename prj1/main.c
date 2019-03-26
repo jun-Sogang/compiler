@@ -36,11 +36,11 @@ FILE *code;
 
 /* allocate and set tracing flags */
 
-int EchoSource = TRUE;
+int EchoSource = FALSE;
 int TraceScan = TRUE;
-int TraceParse = TRUE;
-int TraceAnalyze = TRUE;
-int TraceCode = TRUE;
+int TraceParse = FALSE;
+int TraceAnalyze = FALSE;
+int TraceCode = FALSE;
 
 int Error = FALSE;
 
@@ -67,6 +67,8 @@ main (int argc, char *argv[]) {
     fprintf(listing, "\nTINY COMPILATION: %s\n", pgm);
 
 #if NO_PARSE
+	fprintf(listing, "\tline number\t%s\t\t%-25s\t\n", "token", "lexeme");
+	fprintf(listing, "---------------------------------------------------------\n");
     while (getToken() != ENDFILE);
 #else
     syntaxTree = parse();

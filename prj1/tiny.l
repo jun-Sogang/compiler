@@ -1,16 +1,11 @@
-/****************************************************/
-/* File: tiny.l                                     */
-/* Lex specification for TINY                       */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
-/****************************************************/
+/* File: tiny.l   */
 
 %{
 #include "globals.h"
 #include "util.h"
 #include "scan.h"
 /* lexeme of identifier or reserved word */
-char tokenString[MAXTOKENLEN+1];
+char tokenString[MAXTOKENLEN + 1];
 %}
 
 digit       [0-9]
@@ -30,27 +25,62 @@ whitespace  [ \t]+
 "until"         {return UNTIL;}
 "read"          {return READ;}
 "write"         {return WRITE;}
+
+"int"			{return INT;}
+"while"			{return WHILE;}
+"return"		{return RETURN;}
+
 ":="            {return ASSIGN;}
 "="             {return EQ;}
 "<"             {return LT;}
+"<="			{return LTEQ;}
+"=="			{return EQEQ;}
+">="			{return RTEQ;}
+">"				{return RT;}
+
 "+"             {return PLUS;}
 "-"             {return MINUS;}
 "*"             {return TIMES;}
 "/"             {return OVER;}
+
+"{"				{return LBRACE;}
+"}"				{return RBRACE;}
+"["				{return LBRACKET;}
+"]"				{return RBRACKET;}
 "("             {return LPAREN;}
 ")"             {return RPAREN;}
 ";"             {return SEMI;}
+","				{return COMMA;}
+
 {number}        {return NUM;}
 {identifier}    {return ID;}
 {newline}       {lineno++;}
 {whitespace}    {/* skip whitespace */}
-"{"             { char c;
-                  do
-                  { c = input();
-                    if (c == EOF) break;
-                    if (c == '\n') lineno++;
-                  } while (c != '}');
-                }
+
+"/*"			{
+ 					char c;
+					int starNum = 0;
+					while ((c = input()) != EOF) {
+						switch (c) {
+							case '*':
+							 starNum += 1;
+							 break;
+							case '/':
+							 if (starNum == 1)
+							  return COMMENT;
+							 break;
+							case '\n':
+							 lineno += 1;
+							 starNum = 0;
+							 break;
+
+							default:
+							 starNum = 0;
+						}
+					}
+					return COMMENT_ERROR;
+ 				}
+
 .               {return ERROR;}
 
 %%
@@ -67,7 +97,7 @@ TokenType getToken(void)
   currentToken = yylex();
   strncpy(tokenString,yytext,MAXTOKENLEN);
   if (TraceScan) {
-    fprintf(listing,"\t%d: ",lineno);
+//    fprintf(listing,"\t%d: ",lineno);
     printToken(currentToken,tokenString);
   }
   return currentToken;

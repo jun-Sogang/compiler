@@ -64,7 +64,7 @@ main (int argc, char *argv[]) {
         exit(1);
     }
     listing = stdout; /* send listing to screen */
-    fprintf(listing, "\nTINY COMPILATION: %s\n", pgm);
+//    fprintf(listing, "\nTINY COMPILATION: %s\n", pgm);
 
 #if NO_PARSE
 	fprintf(listing, "\tline number\t%s\t\t%-25s\t\n", "token", "lexeme");

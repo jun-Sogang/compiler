@@ -31,10 +31,10 @@ whitespace  [ \t]+
 "return"		{return RETURN;}
 
 ":="            {return ASSIGN;}
-"="             {return EQ;}
-"<"             {return LT;}
-"<="			{return LTEQ;}
 "=="			{return EQEQ;}
+"="             {return EQ;}
+"<="			{return LTEQ;}
+"<"             {return LT;}
 ">="			{return RTEQ;}
 ">"				{return RT;}
 

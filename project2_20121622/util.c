@@ -25,6 +25,7 @@ void printToken(TokenType token, const char* tokenString) {
     //case ASSIGN: fprintf(listing, ":=\n"); break;
 	
 	case INT: fprintf(listing, "INT\t\tint\n"); break;
+  case VOID: fprintf(listing, "VOID\t\tvoid\n"); break;
  	case WHILE: fprintf(listing, "WHILE\t\twhile\n"); break;
 
     case LT: fprintf(listing, "<\t\t<\n"); break;

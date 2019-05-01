@@ -27,6 +27,7 @@ whitespace  [ \t]+
 "write"         {return WRITE;}
 
 "int"			{return INT;}
+"void"		{return VOID;}
 "while"			{return WHILE;}
 "return"		{return RETURN;}
 

@@ -4,7 +4,7 @@
 
 /* set NO_PARSE to TRUE to get a scanner-only compiler */
 
-#define NO_PARSE TRUE
+#define NO_PARSE FALSE
 
 /* set NO_ANALYZE to TRUE to get a parser-only compiler */
 
@@ -36,9 +36,9 @@ FILE *code;
 
 /* allocate and set tracing flags */
 
-int EchoSource = FALSE;
-int TraceScan = TRUE;
-int TraceParse = FALSE;
+int EchoSource = TRUE;
+int TraceScan = FALSE;
+int TraceParse = TRUE;
 int TraceAnalyze = FALSE;
 int TraceCode = FALSE;
 
@@ -74,8 +74,9 @@ main (int argc, char *argv[]) {
     syntaxTree = parse();
     if (TraceParse) {
         fprintf(listing, "\nSyntax tree:\n");
-        printTree(syntaxTree);
+		printTree(syntaxTree);
     }
+	printf("end\n");
 #if !NO_ANALYZE
     if (!Error) {
         fprintf(listing, "\nBuilding Symbol Table...\n");

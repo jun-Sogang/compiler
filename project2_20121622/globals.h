@@ -8,6 +8,12 @@
 #include <ctype.h>
 #include <string.h>
 
+#ifndef YYPARSER
+
+#include "cm.tab.h"
+#define ENDFILE 0
+#endif
+
 #ifndef FALSE
 #define FALSE 0
 #endif  
@@ -19,7 +25,7 @@
 /* MAXRESERVED = the number of reserved words */
 
 #define MAXRESERVED 8
-
+/*
 typedef enum
 {
   ENDFILE, ERROR, 
@@ -31,6 +37,9 @@ typedef enum
   WHILE, INT, VOID, COMMA, COMMENT, LBRACE, RBRACE, LBRACKET, RBRACKET, COMMENT_ERROR
 
 } TokenType;
+*/
+
+typedef int TokenType;
 
 extern FILE* source; /* source code text file */
 extern FILE* listing; /* listing output text file */
@@ -40,14 +49,21 @@ extern int lineno; /* source line number for listing */
 
 /* Syntax tree for parsing */
 
-typedef enum {StmtK, ExpK} NodeKind;
-typedef enum {IfK, RepeatK, AssignK, ReadK, WriteK} StmtKind;
-typedef enum {OpK, ConstK, IdK} ExpKind;
+typedef enum {StmtK, ExpK, DeclK} NodeKind;
+typedef enum {IfK, WhileK, RepeatK, AssignK, ReadK, WriteK, 
+ CompoundStmtK, ExpressionStmtK, SelectionStmtK, IterationStmtK, ReturnStmtK
+} StmtKind;
+typedef enum {OpK, ConstK, IdK, ArrK, 
+ LvarK, ComparisionExpK, AdditiveExpK, MultiplicativeExpK, CallK
+} ExpKind;
+typedef enum {VarK, VarArrK, ParamK, ParamArrK, ParamVoidK, FuncK, TypeK,
+} DeclKind;
 
 /* ExpType is used for type checking */
-typedef enum {Void, Integer, Boolean} ExpType;
+typedef enum {Void, Integer, Boolean,
+} ExpType;
 
-#define MAXCHILDREN 3
+#define MAXCHILDREN 8
 
 typedef struct treeNode
 {
@@ -58,14 +74,34 @@ typedef struct treeNode
   union {
     StmtKind stmt; 
     ExpKind exp;
+	DeclKind decl;
   } kind;
   union {
     TokenType op;
     int val;
     char *name;
   } attr;
+  int arraySize;
   ExpType type;
 } TreeNode;
+
+/*
+   	Declaration
+
+	child	0			1			2			3					4
+			type		ID			parameters	compoundStatement	_num	
+ 
+	Statement
+
+	child	0					1				3			4			5				6
+			local_declarations	statement_list	expression	statement	elseStatement	IF:
+	
+	Expression
+
+	child	0		1			2			3			4			5	6
+			_var	expression	lExpression	Operator	rExpression	ID	args
+*/
+
 
 /* Flags for tracing */
 /* EchoSource = Ture cause the source program to be echoed to the listing file with line numbers during parsing */

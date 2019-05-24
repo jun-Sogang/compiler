@@ -38,7 +38,7 @@ FILE *code;
 
 int EchoSource = TRUE;
 int TraceScan = FALSE;
-int TraceParse = FALSE;
+int TraceParse = TRUE;
 int TraceAnalyze = TRUE;
 int TraceCode = FALSE;
 
@@ -75,7 +75,7 @@ main (int argc, char *argv[]) {
     syntaxTree = parse();
     if (TraceParse) {
         fprintf(listing, "\nSyntax tree:\n");
-	//	printTree(syntaxTree);
+		printTree(syntaxTree);
     }
 	printf("end\n");
 #if !NO_ANALYZE

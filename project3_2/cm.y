@@ -61,6 +61,7 @@ variable_declaration	:	type_check _id SEMI {
 							;
 
 function_declaration	:	type_check _id LPAREN _parameters RPAREN _compoundStatement {
+							 	printf("function\n");
 								savedLineNo = lineno;
 								$$ = functionDeclarationNode($1, $2, $4, $6, savedLineNo);
 							}
@@ -122,9 +123,11 @@ statement	:	expressionStmt {
 				 	$$ = $1;
 				}
 				| selectionStmt {
+				 	printf("selection\n");
 				 	$$ = $1;
 				}
 				| iterationStmt {
+				 	printf("iteration\n");
 				 	$$ = $1;
 				}
 				| returnStmt {

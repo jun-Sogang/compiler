@@ -18,8 +18,8 @@ int func(int parA[], int parB){
 		 if(wvar == 1)
 		  i=0;
 		 else i = 1;
-
 	}
+
  return parA[2];
 }
 

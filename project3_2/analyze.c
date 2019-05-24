@@ -17,6 +17,147 @@ static int location = 0;
  * it applies preProc in preorder and postProc 
  * in postorder to tree pointed to by t
  */
+
+static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc) (TreeNode *)) {
+	if (t != NULL) {
+		int i ;
+		switch (t->nodekind) {
+		 	case StmtK:
+				switch (t->kind.stmt) {
+					case CompoundStmtK:
+					 	/*	
+							child[0] -> local declarations
+							child[1] -> statement list
+							*/
+						st_createHashTable();
+						printf("hello %d\n", t->lineno);
+					 	traverse(t->child[0], preProc, postProc);
+						traverse(t->child[1], preProc, postProc);
+						break;
+					case SelectionStmtK:
+						/*
+						   child[3] -> expression
+						   child[4] -> statement
+						   child[5] -> elseStatement
+						   */
+						scopeUp();
+						
+						traverse(t->child[3], preProc, postProc);
+						traverse(t->child[4], preProc, postProc);
+						// if else exist, should we make new hashTable?
+						traverse(t->child[5], preProc, postProc);
+						
+						scopeDown();
+						break;
+					case IterationStmtK:
+						scopeUp();
+						
+						traverse(t->child[3], preProc, postProc);
+						traverse(t->child[4], preProc, postProc);
+						
+						scopeDown();
+						break;
+					case ExpressionStmtK:
+						traverse(t->child[2], preProc, postProc);
+						break;
+					defualt:
+						break;
+				}
+				break;
+			case ExpK:
+				switch (t->kind.exp) {
+					case IdK:
+					 	printf("+++++%s %d\n", t->attr.name, t->lineno);
+					 	lineno_insert(t->attr.name, t->lineno);
+						break;
+					case ArrK:
+						break;
+					case LvarK:
+						traverse(t->child[0], preProc, postProc);
+						traverse(t->child[1], preProc, postProc);
+						break;
+					case ComparisionExpK:
+					case AdditiveExpK:
+					case MultiplicativeExpK:
+						traverse(t->child[3], preProc, postProc);
+					case CallK:
+						traverse(t->child[5], preProc, postProc);
+						if (t->child[6] != NULL)
+							traverse(t->child[6], preProc, postProc);
+						break;
+				}
+				break;
+			case DeclK:
+				switch (t->kind.decl) {
+					case FuncK:
+					 	/*
+						   child[0] -> type
+						   child[2] -> parameters
+						   child[3] -> compoundStatement
+						   */
+					 	preProc(t);
+					 	scopeUp();
+						
+						traverse(t->child[2], preProc, postProc);
+						traverse(t->child[3], preProc, postProc);
+						
+						scopeDown();
+						break;
+					case VarK:
+					case VarArrK:
+					case ParamK:
+					case ParamArrK:
+						preProc(t);
+						break;
+					case TypeK:
+						switch (t->type) {
+							case LT:
+						 	case LE:
+						 	case GT:
+						 	case GE:
+						 	case EQ:
+							case NE:
+							case PLUS:
+							case MINUS:
+							case TIMES:
+							case OVER:
+						  		traverse(t->child[2], preProc, postProc);
+						  		traverse(t->child[4], preProc, postProc);
+						}
+					default:
+						break;
+				}
+				break;
+			default:
+				break;
+		}
+
+		postProc(t);
+		traverse(t->sibling, preProc, postProc);
+	}
+}
+static void insertNode(TreeNode *t) {
+	switch (t->kind.decl) {
+		case VarK:
+		 	if (st_lookup(t->child[1]->attr.name) == -1) st_insert(t->child[1]->attr.name, t->child[1]->lineno, location++, "int", 0, "Var");
+			break;
+		case VarArrK:
+		 	if (st_lookup(t->child[1]->attr.name) == -1) st_insert(t->child[1]->attr.name, t->child[1]->lineno, location++, "array", t->child[4]->attr.val, "Var");
+			break;
+		case ParamK:
+		 	if (st_lookup(t->child[1]->attr.name) == -1) st_insert(t->child[1]->attr.name, t->child[1]->lineno, location++, "int", 0, "Par");
+			break;
+		case ParamArrK:
+		 	if (st_lookup(t->child[1]->attr.name) == -1) st_insert(t->child[1]->attr.name, t->child[1]->lineno, location++, "array", 0, "Par");
+			break;
+		case FuncK:
+		 	if (st_lookup(t->child[1]->attr.name) == -1) st_insert(t->child[1]->attr.name, t->child[1]->lineno, location++, t->child[0]->type == 0 ? "void" : "int", 0, "Func");
+			break;
+		defualt:
+			break;
+	}
+}
+/*
 static void traverse( TreeNode * t,
   void (* preProc) (TreeNode *),
   void (* postProc) (TreeNode *) )
@@ -30,7 +171,7 @@ static void traverse( TreeNode * t,
   traverse(t->sibling,preProc,postProc);
  }
 }
-
+*/
 /* nullProc is a do-nothing procedure to 
  * generate preorder-only or postorder-only
  * traversals from traverse
@@ -44,8 +185,8 @@ static void nullProc(TreeNode * t)
  * identifiers stored in t into 
  * the symbol table 
  */
- static void insertNode( TreeNode * t)
-{/*
+/* static void insertNode( TreeNode * t)
+{
   switch (t->nodekind)
  { case StmtK:
   switch (t->kind.stmt)
@@ -80,8 +221,8 @@ static void nullProc(TreeNode * t)
   break;
   default:
   break;
- }*/
-}
+ }
+}*/
 
 /* Function buildSymtab constructs the symbol 
  * table by preorder traversal of the syntax tree

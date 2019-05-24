@@ -49,6 +49,9 @@ typedef struct BucketListRec
 { char * name;
  LineList lines;
  int memloc ; /* memory location for variable */
+ char type[10];
+ int arraySize;
+ char VPF[10];
  struct BucketListRec * next;
 } * BucketList;
 
@@ -104,51 +107,96 @@ void st_createHashTable() {
 
 }
 
-void st_zero_insert( char * name, int lineno, int loc )
-{ int h = hash(name);
- if (currentScopeNum == 0) {
-  BucketList l =  head->hashTable[h];
-  while ((l != NULL) && (strcmp(name,l->name) != 0))
-   l = l->next;
-  if (l == NULL) /* variable not yet in table */
-  { l = (BucketList) malloc(sizeof(struct BucketListRec));
-   l->name = name;
-   l->lines = (LineList) malloc(sizeof(struct LineListRec));
-   l->lines->lineno = lineno;
-   l->memloc = loc;
-   l->lines->next = NULL;
-   l->next = head->hashTable[h];
-   head->hashTable[h] = l; }
-  else /* found in table, so just add line number */
-  { LineList t = l->lines;
-   while (t->next != NULL) t = t->next;
-   t->next = (LineList) malloc(sizeof(struct LineListRec));
-   t->next->lineno = lineno;
-   t->next->next = NULL;
-  }}
+void lineno_insert(char *name, int lineno) {
+	int curScopeNum = currentScopeNum;
+	HashList now = curTable;
+
+	while (now != NULL) {
+		if (curScopeNum == now->scopeNum) {
+			int h = hash(name);
+
+			if (lineno_lookup(name, now) != -1) {
+				BucketList l = now->hashTable[h];
+				LineList t = l->lines;
+				
+				while (t->next != NULL) t = t->next;
+				t->next = (LineList) malloc(sizeof(struct LineListRec));
+				t->next->lineno = lineno;
+				t->next->next = NULL;
+				break;
+			}
+			else curScopeNum--;
+		}
+		now = now->before;
+		if(now != NULL)
+			printf("lineno_scopenum: %d\n", now->scopeNum);
+	}
+	if (now == NULL) {
+	 	printf("ERROR!!!!\n");
+		// handling exception
+	}
+
 }
 
-void st_insert( char * name, int lineno, int loc )
-{ int h = hash(name);
- BucketList l =  curTable->hashTable[h];
- while ((l != NULL) && (strcmp(name,l->name) != 0))
-  l = l->next;
- if (l == NULL) /* variable not yet in table */
- { l = (BucketList) malloc(sizeof(struct BucketListRec));
-  l->name = name;
-  l->lines = (LineList) malloc(sizeof(struct LineListRec));
-  l->lines->lineno = lineno;
-  l->memloc = loc;
-  l->lines->next = NULL;
-  l->next = curTable->hashTable[h];
-  curTable->hashTable[h] = l; }
- else /* found in table, so just add line number */
- { LineList t = l->lines;
-  while (t->next != NULL) t = t->next;
-  t->next = (LineList) malloc(sizeof(struct LineListRec));
-  t->next->lineno = lineno;
-  t->next->next = NULL;
- }
+int lineno_lookup (char * name, HashList now){ 
+ 	int h = hash(name);
+ 	BucketList l =  now->hashTable[h];
+
+	if(!strcmp(name, "parB")){
+	 	printf("-------------parB-------------\n");
+		printSymTabHead(stdout,now);
+	}
+	if(!strcmp(name, "parB") && l != NULL)
+	 	printf("--------------------parB name: %s\n", l->name);
+ 	
+	while ((l != NULL) && (strcmp(name,l->name) != 0)){
+  		l = l->next;
+	}
+ 	if (l == NULL) return -1;
+ 	else return l->memloc;
+}
+
+void st_insert( char * name, int lineno, int loc, char *type, int arraySize, char *VPF ){ 
+	int h = hash(name);
+	
+	BucketList l;
+	if (currentScopeNum == 0) {
+		l = head->hashTable[h];
+	}
+	else {
+		l = curTable->hashTable[h];
+	}
+	
+	while ((l != NULL) && (strcmp(name,l->name) != 0))
+		l = l->next;
+	if (l == NULL) /* variable not yet in table */
+	{ l = (BucketList) malloc(sizeof(struct BucketListRec));
+	 l->name = name;
+	 l->lines = (LineList) malloc(sizeof(struct LineListRec));
+	 l->lines->lineno = lineno;
+	 l->memloc = loc;
+	 
+	 strncpy(l->type, type, strlen(type) + 1);
+	 l->arraySize = arraySize;
+	 strncpy(l->VPF, VPF, strlen(VPF) + 1);
+
+	 l->lines->next = NULL;
+	 if(currentScopeNum == 0){
+	   l->next = head->hashTable[h];
+	   head->hashTable[h] = l;
+	 }
+	 else{
+		l->next = curTable->hashTable[h];
+		curTable->hashTable[h] = l;
+	 }
+	}
+	else /* found in table, so just add line number */
+	{ LineList t = l->lines;
+	 while (t->next != NULL) t = t->next;
+	 t->next = (LineList) malloc(sizeof(struct LineListRec));
+	 t->next->lineno = lineno;
+	 t->next->next = NULL;
+	}
 } /* st_insert */
 
 /* Function st_lookup returns the memory 
@@ -169,9 +217,8 @@ int st_lookup ( char * name )
  */
 void printSymTab(FILE * listing)
 { int i;
-
- fprintf(listing,"Variable Name  Location   ScopeNum  Line Numbers\n");
- fprintf(listing,"-------------  --------   --------  ------------\n");
+ fprintf(listing,"Name  Scope  Loc  V/P/F  Array?  ArrSize  Type  Line Numbers\n");
+ fprintf(listing,"------------------------------------------------------------\n");
  HashList temp = head;
  while (temp != NULL) {
   for (i=0;i<SIZE;++i)
@@ -179,9 +226,20 @@ void printSymTab(FILE * listing)
    { BucketList l = temp->hashTable[i];
 	while (l != NULL)
 	{ LineList t = l->lines;
-	 fprintf(listing,"%-14s ",l->name);
-	 fprintf(listing,"%-8d  ",l->memloc);
-	 fprintf(listing,"%-8d  ",temp->scopeNum);
+	 fprintf(listing,"%-4s ",l->name);
+	 fprintf(listing,"%-5d  ",temp->scopeNum);
+	 fprintf(listing,"%-3d  ",l->memloc);
+	 fprintf(listing,"%-5s  ",l->VPF);
+
+	 if(!strcmp(l->type, "array")){
+	 	fprintf(listing,"%-5s  ", "Array" );
+	 	fprintf(listing,"%-7d  ", l->arraySize);
+	 }
+	 else{
+	 	fprintf(listing,"%-5s  ", "No" );
+	 	fprintf(listing,"%-7s  ", "-");
+	 }
+	 fprintf(listing,"%-4s  ",l->type);
 	 while (t != NULL)
 	 { fprintf(listing,"%4d ",t->lineno);
 	  t = t->next;
@@ -192,5 +250,42 @@ void printSymTab(FILE * listing)
    }
   }
   temp = temp->next;
+  printf("\n\n");
  }
+} /* printSymTab */
+
+void printSymTabHead(FILE * listing, HashList now)
+{ int i;
+
+ fprintf(listing,"Name  Scope  Loc  V/P/F  Array?  ArrSize  Type  Line Numbers\n");
+ fprintf(listing,"------------------------------------------------------------\n");
+ HashList temp = now;
+  for (i=0;i<SIZE;++i)
+  { if (temp->hashTable[i] != NULL)
+   { BucketList l = temp->hashTable[i];
+	while (l != NULL)
+	{ LineList t = l->lines;
+	 fprintf(listing,"%-4s ",l->name);
+	 fprintf(listing,"%-5d  ",temp->scopeNum);
+	 fprintf(listing,"%-3d  ",l->memloc);
+	 fprintf(listing,"%-5s  ",l->VPF);
+
+	 if(!strcmp(l->type, "array")){
+	 	fprintf(listing,"%-5s  ", "Array" );
+	 	fprintf(listing,"%-7d  ", l->arraySize);
+	 }
+	 else{
+	 	fprintf(listing,"%-5s  ", "No" );
+	 	fprintf(listing,"%-7s  ", "-");
+	 }
+	 fprintf(listing,"%-4s  ",l->type);
+	 while (t != NULL)
+	 { fprintf(listing,"%4d ",t->lineno);
+	  t = t->next;
+	 }
+	 fprintf(listing,"\n");
+	 l = l->next;
+	}
+   }
+  }
 } /* printSymTab */

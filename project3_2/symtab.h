@@ -18,7 +18,7 @@ void scopeUp();
 void scopeDown();
 void st_createHashTable();
 
-void st_insert( char * name, int lineno, int loc );
+void st_insert( char * name, int lineno, int loc, char *type, int arraySize, char *VPF);
 
 /* Function st_lookup returns the memory 
  * location of a variable or -1 if not found

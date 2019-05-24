@@ -167,17 +167,19 @@ TreeNode *functionDeclarationNode(TreeNode *typeNode, TreeNode *ID, TreeNode *pa
 	declNode->child[2] = parameters;
 	declNode->child[3] = compoundStatement;
 	declNode->lineno = savedLineNo;
+
+//	printf("this is function declaration\n");
 	//scopeZero(ID);
 	createSymTab(compoundStatement, parameters);
 	return declNode;
 }
 
 void scopeZero(TreeNode *ID) {
-	st_zero_insert(ID->attr.name, 0, ID->lineno);
+//	st_zero_insert(ID->attr.name, 0, ID->lineno);
 }
 
 void createSymTab(TreeNode *statement, TreeNode *parameter) {
-	printf("make symtab %d\n", temp++);
+/*	printf("make symtab %d\n", temp++);
  	
 	st_createHashTable();
 // insert
@@ -200,7 +202,7 @@ void createSymTab(TreeNode *statement, TreeNode *parameter) {
 
 		parameter_list = parameter_list->sibling;
 	}
-	
+*/	
 }
 
 // Parameter
@@ -272,6 +274,8 @@ TreeNode *selectionStatementNode(TreeNode *expression, TreeNode *statement, Tree
 	stmtNode->child[4] = statement;
 	stmtNode->child[5] = elseStatement;
 	stmtNode->child[6] = newStmtNode(IfK);
+	
+//	printf("this is selection statement\n");
 
 	createSymTab(statement, NULL);
 	if (elseStatement != NULL) createSymTab(elseStatement, NULL);
@@ -287,6 +291,8 @@ TreeNode *iterationStatementNode(TreeNode *expression, TreeNode *statement) {
 	stmtNode->child[3] = expression;
 	stmtNode->child[4] = statement;
 	stmtNode->child[6] = newStmtNode(WhileK);
+
+//	printf("this is iteration statement\b");
 
 	createSymTab(statement, NULL);
 	return stmtNode;
@@ -482,7 +488,7 @@ void printTree (TreeNode *tree) {
     else if (tree->nodekind == ExpK) {
       switch (tree->kind.exp) {
         case OpK:
-          fprintf(listing, "Op: ");
+          fprintf(listing, "O: ");
           printToken(tree->attr.op, "\0");
           break;
         case ConstK:
@@ -593,6 +599,7 @@ void printTree (TreeNode *tree) {
 				 break;
 				case PLUS:
 				 fprintf(listing, "Op : +\n");
+				 fprintf(listing, "hererererrerere\n");
 				 printTree(tree->child[2]);
 				 printTree(tree->child[4]);
 				 break;

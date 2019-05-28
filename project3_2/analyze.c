@@ -30,6 +30,7 @@ int functionTableIndex = 0;
  */
 
 static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc) (TreeNode *), int isFirst) {
+ int siblingCheck = 0;
  if (t != NULL) {
   //printf("[DEBUG] traverse\n");
   int i ;
@@ -41,20 +42,24 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 			child[0] -> local declarations
 			child[1] -> statement list
 	   */
-	  if (isFirst == 1)
+	  if (isFirst == 1){
+	   before_loc = local_location;
 	   st_createHashTable(isTypeCheck);
+	  }
 	  
 	  traverse(t->child[0], preProc, postProc, 0);
-		printf("hhhhhhh %d\n", t->kind.stmt);
-		printf("%d\n", isFirst);
-	  if((t->child[1] != NULL && t->child[1]->kind.stmt == 6) || t->kind.stmt == 6){
-	   printf("494949\n");
+	  if (t->sibling != NULL) {
+	  	siblingCheck = 1;
+	   local_location = before_loc;
+	  }
+	  if((t->child[1] != NULL && t->child[1]->kind.stmt == 6)){
 	   scopeUp();
 	   traverse(t->child[1], preProc, postProc, 1);
 	   scopeDown();
 	  }
-	  else
+	  else{
 	   traverse(t->child[1], preProc, postProc, 0);
+	  }
 
 	  break;
 	 case SelectionStmtK:
@@ -132,7 +137,7 @@ defualt:
 
 	  preProc(t);
 	  scopeUp();
-
+		
 	  st_createHashTable(isTypeCheck);
 
 	  int param_len = param_length(t->child[2]);
@@ -180,7 +185,7 @@ defualt:
   }
 
   postProc(t);
-  traverse(t->sibling, preProc, postProc, 0);
+  traverse(t->sibling, preProc, postProc, siblingCheck);
  }
 }
 static void insertNode(TreeNode *t) {
@@ -360,23 +365,17 @@ defualt:
 	case IdK:
 	 	{	
 		 	BucketList l = st_bucket_lookup(t->attr.name);
-			printf("name : %s\n", t->attr.name);
-			printf("type : %d\n", t->kind.exp);
-			printf("%d\n", t->lineno);
-			printf("VPF: %s\n", l->VPF);
 		}
 	 break;
 	case ArrK:
 
 	 if(t->child[1]->child[5] != NULL){
 	  if (strcmp(st_functionType_lookup(t->child[1]->child[5]->attr.name), "int")) {
-	   printf("%s\n", st_functionType_lookup(t->child[1]->child[5]->attr.name));
 	   printf("index type must be int\n");
 	   exit(1);
 	  }
 	 }
 	 else {
-	  printf("name: %s\n", t->child[5]->attr.name);
 	  BucketList l = st_bucket_lookup(t->child[5]->attr.name);
 
 	  if(l == NULL){
@@ -391,7 +390,6 @@ defualt:
 	 }
 	 break;
 	case LvarK:
-	 printf("????????\n");
 	 {
 	 if (t->child[1]->kind.exp == 8) {
 	   	BucketList l = st_bucket_lookup(t->child[1]->child[5]->attr.name);
@@ -415,7 +413,6 @@ defualt:
 	 break;
 	case CallK:
 	 {
-	  printf("CALLLKKKKKKK\n");
 	  BucketList l = st_bucket_lookup(t->child[5]->attr.name);
 
 	  if(strcmp(l->VPF, "Func")) {
@@ -436,7 +433,6 @@ defualt:
 	   printf("ERROR\n");
 	   exit(1);
 	  }
-	  printf("scope num : %d\n", scopeIndex);
 
 	  TreeNode *param = functionTable[scopeIndex]->child[2];
 	  TreeNode *args = t->child[6];
@@ -448,11 +444,8 @@ defualt:
 	   printf("parameter length : %d is not equal to argument length : %d\n", paramLen, argsLen);
 	   exit(1);
 	  }
-	  printf("LEN param : %d args : %d\n", paramLen, argsLen);
 
 	  for (i = 0; i < paramLen; ++i) {
-	   printf("param : %d args : %d\n", param->kind.decl, args->kind.decl);
-	   printf("%d\n", args->kind.exp);
 	   if (args->kind.exp == 2) {
 		BucketList l = st_bucket_lookup(args->attr.name);
 		// array, int
@@ -486,7 +479,6 @@ defualt:
 
 
 	  BucketList l = st_bucket_lookup(t->child[1]->attr.name);
-	  printf("[DEBUG] function type: %s, name: %s\n", l->type, l->name);
 
 	  // main function type check
 	  if(!strcmp(l->name, "main") && strcmp(l->type, "void")){
@@ -498,7 +490,6 @@ defualt:
 
 
 	  if(!strcmp(l->name, "main") && t->child[2]->kind.decl != 4) {
-	   printf("[parameter] %d\n", t->child[2]->kind.decl);
 	   printf("main function should not have parameters\n");
 	   exit(1);
 	  }
@@ -518,7 +509,6 @@ defualt:
 		exit(1);
 	   }
 
-	   printf("[DEBUG] return statement %d\n", temp->kind.stmt);
 	  }
 	  else{
 
@@ -534,7 +524,6 @@ defualt:
 	 break;
 	case VarK:
 	case VarArrK:
-	 printf("hello\n");
 	 if(t->child[0]->type == 0){
 	  printf("variable type can not be void\n");
 	  exit(1);

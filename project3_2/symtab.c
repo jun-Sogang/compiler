@@ -106,7 +106,6 @@ void lineno_insert(char *name, int lineno) {
 	HashList now = curTable;
 	while (now != NULL) {
 		if (curScopeNum == now->scopeNum) {
-//		 	printf("222\n");
 			int h = hash(name);
 			if (lineno_lookup(name, now) != -1) {
 				BucketList l = now->hashTable[h];
@@ -121,13 +120,9 @@ void lineno_insert(char *name, int lineno) {
 			}
 			else curScopeNum--;
 		}
-//		printSymTabHead(stdout,now);
 		now = now->before;
-		//if(now != NULL)
-		//	printf("lineno_scopenum: %d\n", now->scopeNum);
 	}
 	if (now == NULL) {
-	 printf("hellossss\n");
 	 	printf("ERROR in line %d : %s not exist\n", lineno, name);
 		exit(1);
 		// handling exception
@@ -138,14 +133,6 @@ void lineno_insert(char *name, int lineno) {
 int lineno_lookup (char * name, HashList now){ 
  	int h = hash(name);
  	BucketList l =  now->hashTable[h];
-/*
-	iif(!strcmp(name, "parB")){
-	 	printf("-------------parB-------------\n");
-		printSymTabHead(stdout,now);
-	}
-	if(!strcmp(name, "parB") && l != NULL)
-	 	printf("--------------------parB name: %s\n", l->name);
- */	
 	while ((l != NULL) && (strcmp(name,l->name) != 0)){
   		l = l->next;
 	}
@@ -199,7 +186,6 @@ void st_insert( char * name, int lineno, int loc, char *type, int arraySize, cha
 int st_lookup ( char * name )
 { int h = hash(name);
  BucketList l =  curTable->hashTable[h];
-  printf("st_lookup name: %s, scopeNum: %d\n", name, curTable->scopeNum);
  while ((l != NULL) && (strcmp(name,l->name) != 0)){
   l = l->next;
  }
@@ -252,10 +238,11 @@ BucketList st_bucket_lookup(char *name) {
  */
 void printSymTab(FILE * listing)
 { int i;
- fprintf(listing,"Name  Scope  Loc  V/P/F  Array?  ArrSize  Type  Line Numbers\n");
- fprintf(listing,"------------------------------------------------------------\n");
+ 
  HashList temp = head;
  while (temp != NULL) {
+fprintf(listing,"Name  Scope  Loc  V/P/F  Array?  ArrSize  Type  Line Numbers\n");
+ fprintf(listing,"------------------------------------------------------------\n");
   for (i=0;i<SIZE;++i)
   { if (temp->hashTable[i] != NULL)
    { BucketList l = temp->hashTable[i];

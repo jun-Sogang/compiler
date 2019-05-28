@@ -38,7 +38,7 @@ FILE *code;
 
 int EchoSource = TRUE;
 int TraceScan = FALSE;
-int TraceParse = TRUE;
+int TraceParse = FALSE;
 int TraceAnalyze = TRUE;
 int TraceCode = FALSE;
 
@@ -77,7 +77,6 @@ main (int argc, char *argv[]) {
         fprintf(listing, "\nSyntax tree:\n");
 		printTree(syntaxTree);
     }
-	printf("end\n");
 #if !NO_ANALYZE
     if (!Error) {
         fprintf(listing, "\nBuilding Symbol Table...\n");

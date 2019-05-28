@@ -63,6 +63,10 @@ void init() {
  curTable = head;
 }
 
+void set_curTable_head() {
+	curTable = head;
+	currentScopeNum = 0;
+}
 
 /* Procedure st_insert inserts line numbers and
  * memory locations into the symbol table
@@ -82,14 +86,15 @@ void scopeDown() {
  else currentScopeNum -= 1;
 }
 
-void st_createHashTable() {
- HashList new = (HashList)malloc(sizeof(struct HashRec));
- //printf("HashTable created!!!\n");
- curTable->next = new;
- new->before = curTable;
- new->next = NULL;
- new->scopeNum = currentScopeNum;
- //printf("scopeNum: %d\n", new->scopeNum);
+void st_createHashTable(int isTypeCheck) {
+
+ if(isTypeCheck == 0){
+ 	 HashList new = (HashList)malloc(sizeof(struct HashRec));
+  	curTable->next = new;
+  	new->before = curTable;
+  	new->next = NULL;
+  	new->scopeNum = currentScopeNum;
+ }
 
  curTable = curTable->next;
 
@@ -318,4 +323,29 @@ void printSymTabHead(FILE * listing, HashList now)
 	}
    }
   }
-} /* printSymTab */
+} 
+
+void isMainLast()
+{
+  HashList temp = head;
+  int maxLoc = -1;
+  int mainLoc = -1;
+
+  for (int i=0;i<SIZE;++i) { 
+  	if (temp->hashTable[i] != NULL) { 
+		BucketList l = temp->hashTable[i];
+		
+		while (l != NULL) {
+			if(!strcmp(l->VPF, "Func") && maxLoc < l->memloc) maxLoc = l->memloc;
+  		    if(!strcmp(l->VPF, "Func") && !strcmp(l->name, "main")) mainLoc = l->memloc;
+	        l = l->next;
+		}
+	}
+  }
+
+	if(mainLoc != maxLoc){
+		printf("main function should lie in the last\n");
+		exit(1);
+	}
+}
+/* printSymTab */

@@ -35,8 +35,8 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 							child[0] -> local declarations
 							child[1] -> statement list
 							*/
-					 	if (isFirst == 1 && isTypeCheck == 0){
-							st_createHashTable();
+					 	if (isFirst == 1){
+							st_createHashTable(isTypeCheck);
 						}
 
 					 	traverse(t->child[0], preProc, postProc, 0);
@@ -57,12 +57,10 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 						   */
 						traverse(t->child[3], preProc, postProc, 0);
 						scopeUp();
-						if (isTypeCheck == 0)
-							st_createHashTable();
+						st_createHashTable(isTypeCheck);
 						traverse(t->child[4], preProc, postProc, 0);
 						if (t->child[5] != NULL) {
-						 	if (isTypeCheck != 0)
-							 	st_createHashTable();
+							 st_createHashTable(isTypeCheck);
 							traverse(t->child[5], preProc, postProc, 0);
 						}
 						
@@ -71,10 +69,8 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 					case IterationStmtK:
 						traverse(t->child[3], preProc, postProc, 0);
 						scopeUp();
-						if (isTypeCheck == 0)
-							st_createHashTable();
+						st_createHashTable(isTypeCheck);
 						traverse(t->child[4], preProc, postProc, 0);
-						
 						scopeDown();
 						break;
 					case ExpressionStmtK:
@@ -90,8 +86,9 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 			case ExpK:
 				switch (t->kind.exp) {
 					case IdK:
-					 	printf("[DEBUG] IdK name: %s, lineno: %d\n", t->attr.name, t->lineno);
-					 	lineno_insert(t->attr.name, t->lineno);
+					 	if(isTypeCheck == 0)
+					 		lineno_insert(t->attr.name, t->lineno);
+						printf("[DEBUG] name: %s, lineno: %d\n", t->attr.name, t->lineno);
 						break;
 					case ArrK:
 						traverse(t->child[5], preProc, postProc, 0);
@@ -127,8 +124,7 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 					 	preProc(t);
 					 	scopeUp();
 				
-						if (isTypeCheck == 0)
-							st_createHashTable();
+						st_createHashTable(isTypeCheck);
 
 						int param_len = param_length(t->child[2]);
 						param_location += param_len*4;
@@ -250,77 +246,6 @@ static void insertNode(TreeNode *t) {
 			break;
 	}
 }
-/*
-static void traverse( TreeNode * t,
-  void (* preProc) (TreeNode *),
-  void (* postProc) (TreeNode *) )
-{ if (t != NULL)
- { preProc(t);
-  { int i;
-   for (i=0; i < MAXCHILDREN; i++)
-	traverse(t->child[i],preProc,postProc);
-  }
-  postProc(t);
-  traverse(t->sibling,preProc,postProc);
- }
-}
-*/
-/* nullProc is a do-nothing procedure to 
- * generate preorder-only or postorder-only
- * traversals from traverse
- */
-static void nullProc(TreeNode * t)
-{ if (t==NULL) return;
- else return;
-}
-
-/* Procedure insertNode inserts 
- * identifiers stored in t into 
- * the symbol table 
- */
-/* static void insertNode( TreeNode * t)
-{
-  switch (t->nodekind)
- { case StmtK:
-  switch (t->kind.stmt)
-  { case AssignK:
-   case ReadK:
-	if (st_lookup(t->attr.name) == -1)
-	 // not yet in table, so treat as new definition 
-	 st_insert(t->attr.name,t->lineno,location++);
-	else
-	 // already in table, so ignore location, 
-	 //	add line number of use only  
-	 st_insert(t->attr.name,t->lineno,0);
-	break;
-   default:
-	break;
-  }
-  break;
-  case ExpK:
-  switch (t->kind.exp)
-  { case IdK:
-   if (st_lookup(t->attr.name) == -1)
-	// not yet in table, so treat as new definition 
-	st_insert(t->attr.name,t->lineno,location++);
-   else
-	// already in table, so ignore location, 
-	   //add line number of use only  
-	st_insert(t->attr.name,t->lineno,0);
-   break;
-   default:
-   break;
-  }
-  break;
-  default:
-  break;
- }
-}*/
-
-/* Function buildSymtab constructs the symbol 
- * table by preorder traversal of the syntax tree
- */
-
 
 static void typeError(TreeNode * t, char * message)
 { fprintf(listing,"Type error at line %d: %s\n",t->lineno,message);
@@ -352,16 +277,6 @@ static void typeError(TreeNode * t, char * message)
 			case ExpK:
 				switch (t->kind.exp) {
 					case IdK:
-					 /*
-					 	{	BucketList l = st_bucket_lookup(t->attr.name);
-						printf("name : %s\n", t->attr.name);
-						 if (strcmp(l->type, "int")) {
-						  printf("type : %s\n{", l->type);
-						  printf("array type can not be used like int\n");
-						  printf("lineno: %d\n", t->lineno);
-						  exit(1);
-						 }
-						}*/
 						break;
 					case ArrK:
 
@@ -377,7 +292,9 @@ static void typeError(TreeNode * t, char * message)
 							BucketList l = st_bucket_lookup(t->child[5]->attr.name);
 							
 							if(l == NULL){
-							 printf("NULL\n");
+							 printSymTabCur(); 
+							 printf("Scope: %d\n", scopeCheck());
+							 printf("asdfasdf NULL\n");
 							 exit(1);
 							}
 							
@@ -401,15 +318,14 @@ static void typeError(TreeNode * t, char * message)
 						  printf("%s is not a function\n", t->child[5]->attr.name);
 						  exit(1);
 						 }
-						 break;
 						}
+						 break;
 				}
 				break;
 			case DeclK:
 				switch (t->kind.decl) {
 					case FuncK:
 					 	{
-						 //printf("[DEBUG] attr name: %s\n", t->child[1]->attr.name);
 						 BucketList l = st_bucket_lookup(t->child[1]->attr.name);
 						 printf("[DEBUG] function type: %s, name: %s\n", l->type, l->name);
 							
@@ -429,7 +345,6 @@ static void typeError(TreeNode * t, char * message)
 						 }
 						 // if return statement exist
 						 if(t->child[3]->child[1] != NULL){
-						     printf("[DEBUG] hello my freefefefefef\n");
 						 	 TreeNode *temp = t->child[3]->child[1];
 						 	 while(temp->sibling != NULL) temp = temp->sibling;
 
@@ -444,9 +359,7 @@ static void typeError(TreeNode * t, char * message)
 								exit(1);
 							 }
 
-							 //printf("[DEBUG] in FuncK, return statement name %s\n", temp->child[4]->attr.name);
-						//	 printf("[DEBUG] in FuncK, exp type: %d\n", temp->child[4]->type);
-						 	 printf("hihih&*(&*( %d\n", temp->kind.stmt);
+						 	 printf("[DEBUG] return statement %d\n", temp->kind.stmt);
 						 }
 						 else{
 
@@ -515,11 +428,17 @@ int param_length(TreeNode * t)
 	return len;
 }
 
+static void nullProc(TreeNode *t)
+{
+ if(t == NULL) return;
+ else return;
+}
+
 /* Procedure typeCheck performs type checking 
  * by a postorder syntax tree traversal
  */
 void buildSymtab(TreeNode * syntaxTree)
-{ traverse(syntaxTree,insertNode,checkNode, 0);
+{ traverse(syntaxTree,insertNode,nullProc, 0);
  if (TraceAnalyze)
  { fprintf(listing,"\nSymbol table:\n\n");
   printSymTab(listing);
@@ -528,6 +447,7 @@ void buildSymtab(TreeNode * syntaxTree)
 }
 void typeCheck(TreeNode * syntaxTree)
 {
+ set_curTable_head();
  isTypeCheck = 1;
  traverse(syntaxTree,nullProc,checkNode, 0);
 

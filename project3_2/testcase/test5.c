@@ -2,14 +2,15 @@
    void type of array index */
 
 int a(int b, int c) {
-	return b + c;
+ 	return b + c;
+}
+void bb(void) {
+
 }
 
 void main(void) {
-	int b;
+ 	int b;
 	int c[1];
-	b=1;
-	c[1] = 1;
-	if (1)
-		a(b, c);
+	b=bb;
+	c[1] = b + a(b,1);
 }

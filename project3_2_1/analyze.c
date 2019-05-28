@@ -18,10 +18,6 @@ static int param_location = 0;
 static int global_check = 1;
 static int isTypeCheck = 0;
 
-TreeNode *functionTable[100];
-int functionTableIndex = 0;
-
-
 /* Procedure traverse is a generic recursive 
  * syntax tree traversal routine:
  * it applies preProc in preorder and postProc 
@@ -30,7 +26,6 @@ int functionTableIndex = 0;
 
 static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc) (TreeNode *), int isFirst) {
 	if (t != NULL) {
-	 	//printf("[DEBUG] traverse\n");
 		int i ;
 		switch (t->nodekind) {
 		 	case StmtK:
@@ -41,15 +36,11 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 							child[1] -> statement list
 							*/
 					 	if (isFirst == 1 && isTypeCheck == 0){
-						 	//printf("[DEBUG] create hash table, lineno: %d\n", t->lineno);
 							st_createHashTable();
 						}
-						//printf("[DEBUG] compound start %d\n", t->lineno);
-						//printf("[DEBUG] local declarations start\n");
+
 					 	traverse(t->child[0], preProc, postProc, 0);
-						//printf("[DEBUG] local declarations end\n");
-						//printf("[DEBUG] statement list start\n");
-						//printf("[DEBUG] type: %d\n", t->child[1]->kind.stmt);
+
 						if(t->child[1] != NULL && t->child[1]->kind.stmt == 6){
 						 	scopeUp();
 							traverse(t->child[1], preProc, postProc, 1);
@@ -57,11 +48,8 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 						}
 						else
 							traverse(t->child[1], preProc, postProc, 0);
-						//printf("[DEBUG] statement list end\n");
-						//printf("[DEBUG] compound end %d\n", t->lineno);
 						break;
 					case SelectionStmtK:
-						//printf("[DEBUG] Selection Start!!\n");
 						/*
 						   child[3] -> expression
 						   child[4] -> statement
@@ -69,37 +57,28 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 						   */
 						traverse(t->child[3], preProc, postProc, 0);
 						scopeUp();
-						//printf("[DEBUG] create hash table, lineno: %d\n", t->lineno);
 						if (isTypeCheck == 0)
 							st_createHashTable();
 						traverse(t->child[4], preProc, postProc, 0);
-						// if else exist, should we make new hashTable?
 						if (t->child[5] != NULL) {
-						 //	printf("[DEBUG] create hash table, lineno: %d\n", t->lineno);
 						 	if (isTypeCheck != 0)
 							 	st_createHashTable();
 							traverse(t->child[5], preProc, postProc, 0);
 						}
 						
 						scopeDown();
-					//	printf("[DEBUG] Selection End!!\n");
 						break;
 					case IterationStmtK:
-					//	printf("[DEBUG] iteration start\n");
 						traverse(t->child[3], preProc, postProc, 0);
 						scopeUp();
-					//	printf("[DEBUG] create hash table, lineno: %d\n", t->lineno);
 						if (isTypeCheck == 0)
 							st_createHashTable();
 						traverse(t->child[4], preProc, postProc, 0);
 						
 						scopeDown();
-					//	printf("[DEBUG] iteration end\n");
 						break;
 					case ExpressionStmtK:
-					//	printf("[DEBUG] Expression start!!!\n");
 						traverse(t->child[2], preProc, postProc, 0);
-					//	printf("[DEBUG] Expression end!!!\n");
 						break;
 					case ReturnStmtK:
 						traverse(t->child[4], preProc, postProc, 0);
@@ -117,8 +96,6 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 					case ArrK:
 						traverse(t->child[5], preProc, postProc, 0);
 						traverse(t->child[1], preProc, postProc, 0);
-					//	printf("arr line no %d %d\n", t->child[1]->kind.exp, t->child[1]->lineno);
-					 	//lineno_insert(t->attr.name, t->lineno);
 						break;
 					case LvarK:
 						traverse(t->child[0], preProc, postProc, 0);
@@ -139,41 +116,27 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 			case DeclK:
 				switch (t->kind.decl) {
 					case FuncK:
-					// 	printf("[DEBUG] Function start\n");
 					 	/*
 						   child[0] -> type
 						   child[2] -> parameters
 						   child[3] -> compoundStatement
 						   */
+
 						global_check = 0;
 						local_location = -4;
-						printf("after func : %d\n", scopeCheck());
-						functionTable[functionTableIndex++] = t;
-					 	
-						preProc(t);
+					 	preProc(t);
 					 	scopeUp();
 				
-				//		printf("[DEBUG] create hash table, lineno: %d\n", t->lineno);
 						if (isTypeCheck == 0)
 							st_createHashTable();
 
-				//		printf("[DEBUG] in function, parameter start\n");
 						int param_len = param_length(t->child[2]);
-				//		printf("[DEBUG] parameter length: %d\n", param_len);
 						param_location += param_len*4;
-						printf("before param!!!\n");
 						traverse(t->child[2], preProc, postProc, 0);
-				//		printf("[DEBUG] in function, parameter end\n");
-				//		printf("[DEBUG] function compound start\n");
-						//printf("[DEBUG] name: %s, lineno: %d\n", t->child[3]->attr.name, t->child[3]->child[1]->lineno);
 						traverse(t->child[3], preProc, postProc, 0);
-				//		printf("[DEBUG] function compound end\n");
-						
 						scopeDown();
-						// initialize
 						global_check = 1;
 						param_location = 0;
-				//	 	printf("[DEBUG] Function End\n");
 						break;
 					case VarK:
 					case VarArrK:
@@ -181,12 +144,7 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 						break;
 					case ParamK:
 					case ParamArrK:
-						printf("param %s\n", t->child[1]->attr.name);
-				//		printf("[DEBUG] parameter start\n");
-				//		if(t->child[1] != NULL)
-				//			printf("[DEBUG] paramK %s, lineno: %d\n", t->child[1]->attr.name, t->child[1]->lineno);
 						preProc(t);
-				//		printf("[DEBUG] parameter end\n");
 						break;
 					case TypeK:
 						switch (t->type) {
@@ -195,7 +153,6 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 						 	case GT:
 						 	case GE:
 						 	case EQ:
-				//			 	printf("[DEBUG] EQ : %d\n", t->lineno);
 							case NE:
 							case PLUS:
 							case MINUS:
@@ -218,9 +175,7 @@ static void traverse(TreeNode *t, void (* preProc) (TreeNode *), void(* postProc
 		}
 
 		postProc(t);
-//		printf("[DEBUG] sibling start, lineno: %d\n", t->lineno);
 		traverse(t->sibling, preProc, postProc, 0);
-//		printf("[DEBUG] sibling end, lineno: %d\n", t->lineno);
 	}
 }
 static void insertNode(TreeNode *t) {
@@ -283,9 +238,8 @@ static void insertNode(TreeNode *t) {
 
 			break;
 		case FuncK:
-		 	if (st_function_lookup(t->child[1]->attr.name) == -1) {
+		 	if (st_function_lookup(t->child[1]->attr.name) == -1) 
 			 	st_insert(t->child[1]->attr.name, t->child[1]->lineno, func_location++, t->child[0]->type == 0 ? "void" : "int", 0, "Func");
-			}
 			else {
 			 printf("ERROR in line %d : declaration of %s duplicated first declared at line %d\n", t->child[1]->lineno, t->child[1]->attr.name, st_function_lookup(t->child[1]->attr.name));
 				exit(1);
@@ -447,61 +401,6 @@ static void typeError(TreeNode * t, char * message)
 						  printf("%s is not a function\n", t->child[5]->attr.name);
 						  exit(1);
 						 }
-
-						 int i;
-						 int scopeIndex = -1;
-						 for (i = 0; i < functionTableIndex; ++i) {
-						 	if (!strcmp(t->child[5]->attr.name, functionTable[i]->child[1]->attr.name)) {
-								scopeIndex = i;
-								break;
-							}
-						 }
-
-						 if (scopeIndex == -1) {
-						 	printf("ERROR\n");
-							exit(1);
-						 }
-						 printf("scope num : %d\n", scopeIndex);
-
-						 TreeNode *param = functionTable[scopeIndex]->child[2];
-						 TreeNode *args = t->child[6];
-						 printf("@@@@@@@@%s\n", args->attr.name);
-
-						 int paramLen = param == NULL ? 0 :  param_length(param);
-						 int argsLen = args == NULL ? 0 : param_length(args);
-
-						 if (paramLen != argsLen) {
-						 	printf("parameter length : %d is not equal to argument length : %d\n", paramLen, argsLen);
-							exit(1);
-						 }
-							printf("LEN param : %d args : %d\n", paramLen, argsLen);
-							
-						 for (i = 0; i < paramLen; ++i) {
-						  	printf("param : %d args : %d\n", param->kind.decl, args->kind.decl);
-							printf("%d\n", args->kind.exp);
-							if (args->kind.exp == 2) {
-								BucketList l = st_bucket_lookup(args->attr.name);
-							 // array, int
-							 	if((!strcmp(l->type, "array") &&  param->kind.decl == 2) || (!strcmp(l->type, "int") && param->kind.decl == 3)) {
-							  	printf("parameter type is not equal to argument type\n");
-							  	exit(1);
-							 	}
-							 	param = param->sibling;
-							 	args = args->sibling;
-							}
-							else if (args->kind.exp == 1) {
-								if (param->kind.decl != 2) {
-									printf("parameter type is not equal to arugmnet type\n");
-									exit(1);
-								}
-							}
-							else {
-								printf("argument ERROR\n");
-								exit(1);
-							}
-													 }
-						 
-
 						 break;
 						}
 				}
@@ -510,14 +409,60 @@ static void typeError(TreeNode * t, char * message)
 				switch (t->kind.decl) {
 					case FuncK:
 					 	{
-					  	/*	TreeNode *temp = t->child[3]->child[1];
-							while(temp->sibling != NULL) temp = temp->sibling;
-							printf("hihih&*(&*( %d\n", temp->kind.stmt);
-						*/}
+						 //printf("[DEBUG] attr name: %s\n", t->child[1]->attr.name);
+						 BucketList l = st_bucket_lookup(t->child[1]->attr.name);
+						 printf("[DEBUG] function type: %s, name: %s\n", l->type, l->name);
+							
+						 // main function type check
+						 if(!strcmp(l->name, "main") && strcmp(l->type, "void")){
+							printf("main function type must be void\n");
+							exit(1);
+						 }
+
+						 // main function parameter check
+						 
+						
+						 if(!strcmp(l->name, "main") && t->child[2]->kind.decl != 4) {
+						  	printf("[parameter] %d\n", t->child[2]->kind.decl);
+							printf("main function should not have parameters\n");
+							exit(1);
+						 }
+						 // if return statement exist
+						 if(t->child[3]->child[1] != NULL){
+						     printf("[DEBUG] hello my freefefefefef\n");
+						 	 TreeNode *temp = t->child[3]->child[1];
+						 	 while(temp->sibling != NULL) temp = temp->sibling;
+
+							 // if function type is void and return statement exist
+							 if(!strcmp(l->type, "void") && temp->kind.stmt == 10){
+							  printf("void function can not have return statement\n");
+							  exit(1);
+							 }
+
+							 if(!strcmp(l->type, "int") && temp->child[4] == NULL){
+								printf("int function return statement must have integer variable\n");
+								exit(1);
+							 }
+
+							 //printf("[DEBUG] in FuncK, return statement name %s\n", temp->child[4]->attr.name);
+						//	 printf("[DEBUG] in FuncK, exp type: %d\n", temp->child[4]->type);
+						 	 printf("hihih&*(&*( %d\n", temp->kind.stmt);
+						 }
+						 else{
+
+						  	if(strcmp(l->type, "void")){
+								
+							 	printf("int function must have return statement\n");
+								exit(1);
+							}
+
+
+						 }
+
+						}
 						break;
 					case VarK:
 					case VarArrK:
-						printf("hello\n");
 						if(t->child[0]->type == 0){
 						 	printf("variable type can not be void\n");
 							exit(1);

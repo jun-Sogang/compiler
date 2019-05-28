@@ -48,5 +48,5 @@ void main(void){
 			tmp = two;
 		}
 	}
-	tmp = func(arr, 1);
+	tmp = func(arr, 45);
 }

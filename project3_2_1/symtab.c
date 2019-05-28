@@ -238,7 +238,7 @@ BucketList st_bucket_lookup(char *name) {
 		}
 		now = now->before;
 	}
-	return NULL;
+
 }
 
 /* Procedure printSymTab prints a formatted 
@@ -319,3 +319,33 @@ void printSymTabHead(FILE * listing, HashList now)
    }
   }
 } /* printSymTab */
+
+void isMainLast()
+{
+ HashList temp = head;
+ int maxLoc = -1;
+ int mainLoc = -1;
+
+  for (int i=0;i<SIZE;++i)
+  { if (temp->hashTable[i] != NULL)
+   { BucketList l = temp->hashTable[i];
+	while (l != NULL)
+	{ 
+
+	 if(!strcmp(l->VPF, "Func") && maxLoc < l->memloc)
+	  maxLoc = l->memloc;
+	 if(!strcmp(l->VPF, "Func") && !strcmp(l->name, "main"))
+	  mainLoc = l->memloc;
+
+	  l = l->next;
+	}
+   }
+  }
+
+  if(mainLoc != maxLoc){
+   printf("main function should lie in the last\n");
+   exit(1);
+  }
+}
+
+
